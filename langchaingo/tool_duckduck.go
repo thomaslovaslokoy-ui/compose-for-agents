@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -44,27 +45,29 @@ func (t *DuckDuckGoTool) Call(ctx context.Context, input string) (string, error)
 		return "", err
 	}
 
-	str := ""
+	// Use strings.Builder for efficient string concatenation
+	var builder strings.Builder
 	for _, content := range res.Content {
-		bs, err := content.MarshalJSON()
-		if err != nil {
-			return "", fmt.Errorf("marshal json content: %w", err)
-		}
+		// Use type assertion instead of marshal/unmarshal for better performance
+		if textContent, ok := content.(*mcp.TextContent); ok {
+			builder.WriteString(textContent.Text)
+		} else {
+			// Fallback for unsupported types
+			bs, err := content.MarshalJSON()
+			if err != nil {
+				return "", fmt.Errorf("marshal json content: %w", err)
+			}
 
-		var r response
-		err = json.Unmarshal(bs, &r)
-		if err != nil {
-			return "", fmt.Errorf("unmarshal json content into: %w", err)
-		}
+			var r response
+			err = json.Unmarshal(bs, &r)
+			if err != nil {
+				return "", fmt.Errorf("unmarshal json content into: %w", err)
+			}
 
-		switch r.Type {
-		case "text":
-			str += content.(*mcp.TextContent).Text
-		default:
 			return "", fmt.Errorf("unsupported response type (yet): %s", r.Type)
 		}
 	}
-	return str, nil
+	return builder.String(), nil
 }
 
 type response struct {
