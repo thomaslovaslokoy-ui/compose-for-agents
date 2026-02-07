@@ -48,11 +48,11 @@ func (t *DuckDuckGoTool) Call(ctx context.Context, input string) (string, error)
 	// Use strings.Builder for efficient string concatenation
 	var builder strings.Builder
 	for _, content := range res.Content {
-		// Use type assertion instead of marshal/unmarshal for better performance
+		// Use type assertion for better performance - only TextContent is supported
 		if textContent, ok := content.(*mcp.TextContent); ok {
 			builder.WriteString(textContent.Text)
 		} else {
-			// Fallback for unsupported types
+			// Non-text content type encountered - determine its type for error reporting
 			bs, err := content.MarshalJSON()
 			if err != nil {
 				return "", fmt.Errorf("marshal json content: %w", err)

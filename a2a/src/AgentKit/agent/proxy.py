@@ -92,6 +92,7 @@ class A2AProxyAgent(BaseAgent):
             )
 
             # Collect streaming response using list for efficient concatenation
+            final_result = ""
             result_chunks = []
             try:
                 stream_response = self.client.send_message_streaming(streaming_request)
@@ -131,6 +132,7 @@ class A2AProxyAgent(BaseAgent):
                     if chunk_content:
                         result_chunks.append(chunk_content)
 
+                # Join all chunks after successful streaming
                 final_result = "".join(result_chunks)
 
             except Exception as e:
