@@ -91,8 +91,9 @@ class A2AProxyAgent(BaseAgent):
                 id=str(uuid.uuid4()), params=make_message_send_params(content_to_send)
             )
 
-            # Collect streaming response
+            # Collect streaming response using list for efficient concatenation
             final_result = ""
+            result_chunks = []
             try:
                 stream_response = self.client.send_message_streaming(streaming_request)
 
@@ -129,7 +130,10 @@ class A2AProxyAgent(BaseAgent):
                         chunk_content = str(text)
 
                     if chunk_content:
-                        final_result += chunk_content
+                        result_chunks.append(chunk_content)
+
+                # Join all chunks after successful streaming
+                final_result = "".join(result_chunks)
 
             except Exception as e:
                 logger.warning("Streaming failed, falling back to non-streaming: %s", e)

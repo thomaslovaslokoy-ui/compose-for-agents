@@ -51,9 +51,8 @@ def create_mcp_toolsets(
             args=["STDIO", f"TCP:{endpoint}"],
         )
 
-    result: list[BaseToolset] = []
-    for tool_list in tools_by_server.values():
-        toolset = MCPToolset(connection_params=conn_params, tool_filter=tool_list)
-        result.append(toolset)
-
-    return result
+    # Use list comprehension for better performance
+    return [
+        MCPToolset(connection_params=conn_params, tool_filter=tool_list)
+        for tool_list in tools_by_server.values()
+    ]
