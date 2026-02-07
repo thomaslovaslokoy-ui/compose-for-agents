@@ -116,17 +116,17 @@ class Agent(BaseAgent, ADKBaseAgent):
                     and event.content.parts[0].text
                 ):
                     response = "\n".join(
-                        [p.text for p in event.content.parts if p.text]
+                        [part.text for part in event.content.parts if part.text]
                     )
                 elif (
                     event.content
                     and event.content.parts
-                    and any(p.function_response for p in event.content.parts)
+                    and any(part.function_response for part in event.content.parts)
                 ):
                     # Find the first part with function_response
-                    for p in event.content.parts:
-                        if p.function_response:
-                            response = p.function_response.model_dump()
+                    for part in event.content.parts:
+                        if part.function_response:
+                            response = part.function_response.model_dump()
                             break
 
                 # Use accumulated response if available, otherwise use final response
