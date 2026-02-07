@@ -64,12 +64,12 @@ func initializeLLM(apiKey string, baseURL string, modelName string) (llms.Model,
 func initializeMCPTools(client *mcp.Client, mcpGatewayURL string) ([]tools.Tool, error) {
 	transport := mcp.NewSSEClientTransport(mcpGatewayURL, nil)
 
-	cs, err := client.Connect(context.Background(), transport)
+	clientSession, err := client.Connect(context.Background(), transport)
 	if err != nil {
 		return nil, fmt.Errorf("connect to MCP gateway: %v", err)
 	}
 
-	mcpTools, err := cs.ListTools(context.Background(), &mcp.ListToolsParams{})
+	mcpTools, err := clientSession.ListTools(context.Background(), &mcp.ListToolsParams{})
 	if err != nil {
 		return nil, fmt.Errorf("list tools: %v", err)
 	}
@@ -88,7 +88,7 @@ func initializeMCPTools(client *mcp.Client, mcpGatewayURL string) ([]tools.Tool,
 		}
 
 		toolBelt[i] = &DuckDuckGoTool{
-			clientSession: cs,
+			clientSession: clientSession,
 			mcpTool:       tool,
 			args:          args,
 		}

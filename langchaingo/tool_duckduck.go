@@ -15,58 +15,58 @@ type DuckDuckGoTool struct {
 	args          map[string]any
 }
 
-func (t *DuckDuckGoTool) Name() string {
-	return t.mcpTool.Name
+func (tool *DuckDuckGoTool) Name() string {
+	return tool.mcpTool.Name
 }
 
-func (t *DuckDuckGoTool) Description() string {
-	return t.mcpTool.Description
+func (tool *DuckDuckGoTool) Description() string {
+	return tool.mcpTool.Description
 }
 
 // Call implements the tool interface. It sets the arguments for the tool and calls the tool.
 // For the fetch_content tool, the input is the URL to fetch.
 // For the search tool, the input is the query to search for.
-func (t *DuckDuckGoTool) Call(ctx context.Context, input string) (string, error) {
-	switch t.mcpTool.Name {
+func (tool *DuckDuckGoTool) Call(ctx context.Context, input string) (string, error) {
+	switch tool.mcpTool.Name {
 	case "fetch_content":
-		t.args["url"] = input
+		tool.args["url"] = input
 	case "search":
-		t.args["query"] = input
+		tool.args["query"] = input
 	default:
-		return "", fmt.Errorf("unsupported tool: %s", t.mcpTool.Name)
+		return "", fmt.Errorf("unsupported tool: %s", tool.mcpTool.Name)
 	}
 
-	res, err := t.clientSession.CallTool(ctx, &mcp.CallToolParams{
-		Name:      t.mcpTool.Name,
-		Arguments: t.args,
+	toolResponse, err := tool.clientSession.CallTool(ctx, &mcp.CallToolParams{
+		Name:      tool.mcpTool.Name,
+		Arguments: tool.args,
 	})
 	if err != nil {
 		return "", err
 	}
 
-	str := ""
-	for _, content := range res.Content {
-		bs, err := content.MarshalJSON()
+	resultText := ""
+	for _, content := range toolResponse.Content {
+		jsonBytes, err := content.MarshalJSON()
 		if err != nil {
 			return "", fmt.Errorf("marshal json content: %w", err)
 		}
 
-		var r response
-		err = json.Unmarshal(bs, &r)
+		var contentResponse ContentResponse
+		err = json.Unmarshal(jsonBytes, &contentResponse)
 		if err != nil {
 			return "", fmt.Errorf("unmarshal json content into: %w", err)
 		}
 
-		switch r.Type {
+		switch contentResponse.Type {
 		case "text":
-			str += content.(*mcp.TextContent).Text
+			resultText += content.(*mcp.TextContent).Text
 		default:
-			return "", fmt.Errorf("unsupported response type (yet): %s", r.Type)
+			return "", fmt.Errorf("unsupported response type (yet): %s", contentResponse.Type)
 		}
 	}
-	return str, nil
+	return resultText, nil
 }
 
-type response struct {
+type ContentResponse struct {
 	Type string `json:"type"`
 }
